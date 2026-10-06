@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="我的清单">
+<meta name="theme-color" content="#ffffff">
+<title>我的清单</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-sub: #8a8a8a;
+    --accent: #2d7d6a;
+    --accent-soft: #e8f3f0;
+    --divider: #ececea;
+    --tag-read: #2d7d6a;
+    --tag-todo: #c4792b;
+    --tag-watch: #5a6bbf;
+    --tag-inbox: #9a9a9a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0; background: var(--bg);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    color: var(--text); font-size: 16px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    max-width: 720px; margin: 0 auto; min-height: 100vh;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(247,247,245,0.92); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 16px 18px 10px; border-bottom: 1px solid var(--divider);
+  }
+  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+  header .sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .tabs {
+    display: flex; gap: 6px; margin-top: 12px; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto; padding: 6px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; color: var(--text-sub);
+    background: transparent; border: 1px solid transparent; cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab.active { background: #fff; color: var(--text); border-color: var(--divider); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .tab .count { font-size: 11px; color: var(--text-sub); margin-left: 4px; }
+  main { padding: 14px 16px 100px; }
+  .section-title {
+    font-size: 12px; color: var(--text-sub); font-weight: 500;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin: 18px 4px 8px;
+  }
+  .item {
+    background: var(--card); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 8px; border: 1px solid var(--divider);
+    transition: transform 0.15s;
+  }
+  .item:active { transform: scale(0.99); }
+  .item-head { display: flex; align-items: flex-start; gap: 8px; }
+  .item-title { font-size: 16px; font-weight: 600; flex: 1; line-height: 1.35; }
+  .item-author { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+  .item-summary { font-size: 13px; color: #555; margin-top: 8px; line-height: 1.5; }
+  .item-meta {
+    display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    font-size: 11px; color: var(--text-sub);
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-read { background: var(--accent-soft); color: var(--tag-read); }
+  .badge-todo { background: #fdf0e3; color: var(--tag-todo); }
+  .badge-watch { background: #eceefc; color: var(--tag-watch); }
+  .badge-inbox { background: #f0f0f0; color: var(--tag-inbox); }
+  .due { color: var(--tag-todo); font-weight: 500; }
+  .actions { display: flex; gap: 6px; margin-top: 10px; }
+  .btn {
+    flex: 1; padding: 7px 10px; border-radius: 8px; font-size: 12px;
+    border: 1px solid var(--divider); background: #fff; color: var(--text);
+    cursor: pointer; font-family: inherit;
+  }
+  .btn:active { background: #f0f0f0; }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:active { background: #246657; }
+  .done .item-title { text-decoration: line-through; color: var(--text-sub); }
+  .done .item-summary { color: #aaa; }
+  .empty {
+    text-align: center; padding: 60px 20px; color: var(--text-sub);
+    font-size: 14px;
+  }
+  .empty .emoji { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.4; }
+  .footer-hint {
+    text-align: center; font-size: 11px; color: var(--text-sub);
+    padding: 20px; margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>我的清单</h1>
+  <div class="sub">把内容发给 WorkBuddy，自动归入这里</div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-cat="all">全部 <span class="count" id="c-all">0</span></button>
+    <button class="tab" data-cat="read">待读 <span class="count" id="c-read">0</span></button>
+    <button class="tab" data-cat="todo">待办 <span class="count" id="c-todo">0</span></button>
+    <button class="tab" data-cat="watch">想看 <span class="count" id="c-watch">0</span></button>
+    <button class="tab" data-cat="inbox">收件箱 <span class="count" id="c-inbox">0</span></button>
+  </div>
+</header>
+
+<main id="list"></main>
+
+<div class="footer-hint">加到桌面：Safari 分享 → 添加到主屏幕</div>
+
+<script>
+// 数据：默认带 3 条示例，让你看到效果
+let ITEMS = [
+  {
+    id: 1, cat: "read", title: "《思考，快与慢》", author: "丹尼尔·卡尼曼",
+    summary: "讲人类思维的两套系统——系统1快速直觉，系统2慢速理性。探讨认知偏误与决策。",
+    added: "2026-10-07", done: false
+  },
+  {
+    id: 2, cat: "todo", title: "AI创新大会注册", author: "",
+    summary: "第七届AI应用创新大会，含大模型落地、Agent实践等议题。",
+    due: "2026-10-20 截止", added: "2026-10-07", done: false
+  },
+  {
+    id: 3, cat: "watch", title: "《只此青绿》", author: "舞蹈诗剧",
+    summary: "以《千里江山图》为灵感的舞蹈诗剧，舞美极有东方韵味。",
+    added: "2026-10-07", done: false
+  },
+  {
+    id: 4, cat: "read", title: "《金牌打手》", author: "",
+    summary: "",
+    extra: "看完后没再看过同类型小说",
+    added: "2026-10-07", done: false
+  },
+  {
+    id: 5, cat: "read", title: "《小阵雨》", author: "天然呆呀",
+    summary: "",
+    extra: "排雷：受有听力障碍，不想听的话会直接摘助听器",
+    added: "2026-10-07", done: false
+  }
+];
+
+// 版本号：当这里的默认数据更新时，强制刷新一次本地存储，保证新条目能进到老用户的页面里
+const DATA_VERSION = 5;
+
+let currentCat = "all";
+
+const CAT_LABEL = { read:"待读", todo:"待办", watch:"想看", inbox:"收件箱" };
+const CAT_BADGE = { read:"badge-read", todo:"badge-todo", watch:"badge-watch", inbox:"badge-inbox" };
+
+function render() {
+  const list = document.getElementById("list");
+  let items = ITEMS;
+  if (currentCat !== "all") items = items.filter(i => i.cat === currentCat);
+
+  // 计数
+  document.getElementById("c-all").textContent = ITEMS.length;
+  ["read","todo","watch","inbox"].forEach(c => {
+    document.getElementById("c-"+c).textContent = ITEMS.filter(i=>i.cat===c).length;
+  });
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty"><span class="emoji">📝</span>这里还空着<br>把内容发给 WorkBuddy，它会自动整理后塞进来</div>`;
+    return;
+  }
+
+  // 按分类分组（仅 all 视图）
+  if (currentCat === "all") {
+    const cats = ["read","todo","watch","inbox"];
+    let html = "";
+    cats.forEach(c => {
+      const sub = items.filter(i => i.cat === c);
+      if (sub.length === 0) return;
+      html += `<div class="section-title">${CAT_LABEL[c]}</div>`;
+      html += sub.map(renderItem).join("");
+    });
+    list.innerHTML = html;
+  } else {
+    list.innerHTML = items.map(renderItem).join("");
+  }
+}
+
+function renderItem(i) {
+  const dueLine = i.due ? `<span class="due">⏰ ${i.due}</span>` : "";
+  const authorLine = i.author ? `<div class="item-author">${i.author}</div>` : "";
+  return `
+    <div class="item ${i.done?'done':''}" data-id="${i.id}">
+      <div class="item-head">
+        <div style="flex:1">
+          <div class="item-title">${i.title}</div>
+          ${authorLine}
+        </div>
+        <span class="badge ${CAT_BADGE[i.cat]}">${CAT_LABEL[i.cat]}</span>
+      </div>
+      ${i.summary ? `<div class="item-summary">${i.summary}</div>` : ""}
+      ${i.extra ? `<div class="item-summary" style="color:#8a8a8a;font-style:normal;border-left:2px solid var(--divider);padding-left:8px;margin-top:6px">${i.extra}</div>` : ""}
+      <div class="item-meta">
+        ${dueLine}
+        <span>+${i.added}</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="toggleDone(${i.id})">${i.done?'取消完成':'标记完成'}</button>
+        <button class="btn" onclick="moveTo(${i.id},'inbox')">→收件箱</button>
+        <button class="btn" onclick="del(${i.id})">删除</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleDone(id) {
+  const i = ITEMS.find(x=>x.id===id); if(i) i.done=!i.done; save(); render();
+}
+function del(id) {
+  if(!confirm("确定删除这条？")) return;
+  ITEMS = ITEMS.filter(x=>x.id!==id); save(); render();
+}
+function moveTo(id, cat) {
+  const i = ITEMS.find(x=>x.id===id); if(i){ i.cat=cat; } save(); render();
+}
+
+// 持久化
+function save() {
+  try {
+    localStorage.setItem("myListItems", JSON.stringify(ITEMS));
+    localStorage.setItem("myListVersion", DATA_VERSION);
+  } catch(e){}
+}
+function load() {
+  try {
+    const v = parseInt(localStorage.getItem("myListVersion") || "0", 10);
+    const s = localStorage.getItem("myListItems");
+    // 仅当本地版本与当前版本一致且已有数据时，才用本地数据；否则用代码里的默认数据并写回
+    if (s && v === DATA_VERSION) {
+      ITEMS = JSON.parse(s);
+    } else {
+      save(); // 把最新默认数据写回本地
+    }
+  } catch(e){}
+}
+
+// 标签切换
+document.getElementById("tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if (!t) return;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  currentCat = t.dataset.cat;
+  render();
+});
+
+load();
+render();
+</script>
+</body>
+</html>
