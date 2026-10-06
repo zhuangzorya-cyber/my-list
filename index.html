@@ -25,6 +25,41 @@
     --tag-todo: #c4792b;
     --tag-watch: #5a6bbf;
     --tag-inbox: #9a9a9a;
+    --tag-prompt: #8b5cb5;
+    --header-bg: rgba(247,247,245,0.92);
+    --btn-bg: #ffffff;
+    --tag-bg: #f0ede8;
+    --tag-color: #7a5a3a;
+    --tag-border: #e5dfd5;
+    --tag-opt-bg: #f5f5f3;
+    --input-border: #ececea;
+    --modal-bg: #ffffff;
+    --shadow: rgba(0,0,0,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416;
+      --card: #1e1e22;
+      --text: #ececec;
+      --text-sub: #888;
+      --accent: #4cb39a;
+      --accent-soft: #1f3530;
+      --divider: #2a2a2e;
+      --tag-read: #4cb39a;
+      --tag-todo: #d49550;
+      --tag-watch: #7d8fd6;
+      --tag-inbox: #aaa;
+      --tag-prompt: #b589d6;
+      --header-bg: rgba(20,20,22,0.92);
+      --btn-bg: #2a2a2e;
+      --tag-bg: #2a2620;
+      --tag-color: #c9a878;
+      --tag-border: #3a3530;
+      --tag-opt-bg: #262629;
+      --input-border: #2a2a2e;
+      --modal-bg: #1e1e22;
+      --shadow: rgba(0,0,0,0.3);
+    }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
@@ -36,11 +71,11 @@
   }
   header {
     position: sticky; top: 0; z-index: 10;
-    background: rgba(247,247,245,0.92); backdrop-filter: blur(20px);
+    background: var(--header-bg); backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 16px 18px 10px; border-bottom: 1px solid var(--divider);
   }
-  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
   header .sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
   .tabs {
     display: flex; gap: 6px; margin-top: 12px; overflow-x: auto;
@@ -53,7 +88,7 @@
     background: transparent; border: 1px solid transparent; cursor: pointer;
     white-space: nowrap;
   }
-  .tab.active { background: #fff; color: var(--text); border-color: var(--divider); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+  .tab.active { background: var(--btn-bg); color: var(--text); border-color: var(--divider); box-shadow: 0 1px 2px var(--shadow); }
   .tab .count { font-size: 11px; color: var(--text-sub); margin-left: 4px; }
   main { padding: 14px 16px 100px; }
   .section-title {
@@ -70,7 +105,7 @@
   .item-head { display: flex; align-items: flex-start; gap: 8px; }
   .item-title { font-size: 16px; font-weight: 600; flex: 1; line-height: 1.35; }
   .item-author { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
-  .item-summary { font-size: 13px; color: #555; margin-top: 8px; line-height: 1.5; }
+  .item-summary { font-size: 13px; color: var(--text-sub); margin-top: 8px; line-height: 1.5; }
   .item-meta {
     display: flex; align-items: center; gap: 10px; margin-top: 10px;
     font-size: 11px; color: var(--text-sub);
@@ -82,15 +117,15 @@
   .badge-read { background: var(--accent-soft); color: var(--tag-read); }
   .badge-todo { background: #fdf0e3; color: var(--tag-todo); }
   .badge-watch { background: #eceefc; color: var(--tag-watch); }
-  .badge-inbox { background: #f0f0f0; color: var(--tag-inbox); }
+  .badge-prompt { background: #f3edf8; color: var(--tag-prompt); }
   .due { color: var(--tag-todo); font-weight: 500; }
   .actions { display: flex; gap: 6px; margin-top: 10px; }
   .btn {
     flex: 1; padding: 7px 10px; border-radius: 8px; font-size: 12px;
-    border: 1px solid var(--divider); background: #fff; color: var(--text);
+    border: 1px solid var(--divider); background: var(--btn-bg); color: var(--text);
     cursor: pointer; font-family: inherit;
   }
-  .btn:active { background: #f0f0f0; }
+  .btn:active { background: var(--divider); }
   .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .btn-primary:active { background: #246657; }
   .done .item-title { text-decoration: line-through; color: var(--text-sub); }
@@ -108,11 +143,11 @@
   .item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
   .tag {
     display: inline-block; padding: 2px 8px; border-radius: 999px;
-    font-size: 11px; background: #f0ede8; color: #7a5a3a;
-    border: 1px solid #e5dfd5;
+    font-size: 11px; background: var(--tag-bg); color: var(--tag-color);
+    border: 1px solid var(--tag-border);
   }
   .tag-clickable { cursor: pointer; }
-  .tag-clickable:active { background: #e5dfd5; }
+  .tag-clickable:active { background: var(--tag-border); }
   /* 标签筛选条 */
   .filter-bar {
     display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px;
@@ -121,7 +156,7 @@
   .filter-bar.show { display: flex; }
   .filter-tag {
     padding: 4px 10px; border-radius: 999px; font-size: 12px;
-    background: #fff; border: 1px solid var(--divider); color: var(--text-sub);
+    background: var(--btn-bg); border: 1px solid var(--divider); color: var(--text-sub);
     cursor: pointer;
   }
   .filter-tag.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
@@ -133,7 +168,7 @@
   }
   .modal-mask.show { display: flex; }
   .modal {
-    background: #fff; width: 100%; max-width: 720px; border-radius: 16px 16px 0 0;
+    background: var(--modal-bg); width: 100%; max-width: 720px; border-radius: 16px 16px 0 0;
     padding: 18px 18px 30px; max-height: 80vh; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -144,7 +179,7 @@
   .modal .tag-options { display: flex; flex-wrap: wrap; gap: 6px; }
   .modal .tag-opt {
     padding: 5px 12px; border-radius: 999px; font-size: 13px;
-    background: #f5f5f3; border: 1px solid var(--divider); color: var(--text);
+    background: var(--tag-opt-bg); border: 1px solid var(--divider); color: var(--text);
     cursor: pointer;
   }
   .modal .tag-opt.selected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
@@ -152,11 +187,11 @@
     display: flex; gap: 6px; margin-top: 6px;
   }
   .modal .custom-input input {
-    flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--divider);
-    font-size: 14px; font-family: inherit;
+    flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--input-border);
+    font-size: 14px; font-family: inherit; background: var(--modal-bg); color: var(--text);
   }
   .modal .custom-input button {
-    padding: 8px 14px; border-radius: 8px; background: var(--text); color: #fff;
+    padding: 8px 14px; border-radius: 8px; background: var(--text); color: var(--btn-bg);
     border: none; font-size: 13px; font-family: inherit; cursor: pointer;
   }
   .modal .modal-actions {
@@ -164,29 +199,101 @@
   }
   .modal .modal-actions button {
     flex: 1; padding: 10px; border-radius: 10px; font-size: 14px;
-    border: 1px solid var(--divider); background: #fff; cursor: pointer; font-family: inherit;
+    border: 1px solid var(--divider); background: var(--btn-bg); color: var(--text); cursor: pointer; font-family: inherit;
   }
   .modal .modal-actions .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* 侧边抽屉 */
+  .drawer-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90;
+    display: none; opacity: 0; transition: opacity 0.25s;
+  }
+  .drawer-mask.show { display: block; opacity: 1; }
+  .drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 260px; max-width: 80vw;
+    background: var(--modal-bg); z-index: 91;
+    transform: translateX(-100%); transition: transform 0.25s ease;
+    padding: 20px 0 30px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+  }
+  .drawer.show { transform: translateX(0); }
+  .drawer-header { padding: 8px 18px 18px; border-bottom: 1px solid var(--divider); }
+  .drawer-header h2 { margin: 0; font-size: 18px; }
+  .drawer-header .sub { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+  .drawer-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 18px; cursor: pointer; font-size: 15px; color: var(--text);
+    border-left: 3px solid transparent;
+  }
+  .drawer-item:active { background: var(--divider); }
+  .drawer-item.active { background: var(--accent-soft); border-left-color: var(--accent); color: var(--accent); font-weight: 500; }
+  .drawer-item .count { font-size: 12px; color: var(--text-sub); }
+  .drawer-item.active .count { color: var(--accent); }
+  .drawer-divider { height: 1px; background: var(--divider); margin: 8px 0; }
+  .menu-btn {
+    background: transparent; border: none; padding: 4px 8px; cursor: pointer;
+    color: var(--text); font-size: 20px; line-height: 1; font-family: inherit;
+  }
+  /* 提示词卡片专用：可展开看全文 */
+  .prompt-body {
+    margin-top: 8px; padding: 10px 12px; background: var(--tag-opt-bg); border-radius: 8px;
+    font-size: 13px; color: var(--text); line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+    max-height: 120px; overflow: hidden; position: relative;
+  }
+  .prompt-body.expanded { max-height: none; }
+  .prompt-body::after {
+    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 36px;
+    background: linear-gradient(transparent, var(--tag-opt-bg));
+  }
+  .prompt-body.expanded::after { display: none; }
+  .prompt-toggle { font-size: 12px; color: var(--accent); margin-top: 6px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>我的清单</h1>
+  <h1>
+    <button class="menu-btn" id="menu-btn">≡</button>
+    我的清单
+  </h1>
   <div class="sub">把内容发给 WorkBuddy，自动归入这里</div>
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-cat="all">全部 <span class="count" id="c-all">0</span></button>
-    <button class="tab" data-cat="read">待读 <span class="count" id="c-read">0</span></button>
-    <button class="tab" data-cat="todo">待办 <span class="count" id="c-todo">0</span></button>
-    <button class="tab" data-cat="watch">想看 <span class="count" id="c-watch">0</span></button>
-    <button class="tab" data-cat="inbox">收件箱 <span class="count" id="c-inbox">0</span></button>
-    <button class="tab" id="filter-toggle" style="margin-left:auto">🏷 筛选</button>
-  </div>
   <div class="filter-bar" id="filter-bar">
     <span class="filter-clear" id="filter-clear">清除筛选</span>
     <div id="filter-tags" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
   </div>
 </header>
+
+<!-- 侧边抽屉 -->
+<div class="drawer-mask" id="drawer-mask"></div>
+<nav class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2>我的清单</h2>
+    <div class="sub">按分类浏览</div>
+  </div>
+  <div class="drawer-item active" data-cat="all">
+    <span>📊 全部</span><span class="count" id="c-all">0</span>
+  </div>
+  <div class="drawer-item" data-cat="read">
+    <span>📚 待读</span><span class="count" id="c-read">0</span>
+  </div>
+  <div class="drawer-item" data-cat="todo">
+    <span>⏰ 待办</span><span class="count" id="c-todo">0</span>
+  </div>
+  <div class="drawer-item" data-cat="watch">
+    <span>🎬 想看</span><span class="count" id="c-watch">0</span>
+  </div>
+  <div class="drawer-item" data-cat="prompt">
+    <span>🤖 提示词</span><span class="count" id="c-prompt">0</span>
+  </div>
+  <div class="drawer-divider"></div>
+  <div class="drawer-item" data-cat="inbox">
+    <span>📥 收件箱</span><span class="count" id="c-inbox">0</span>
+  </div>
+  <div class="drawer-divider"></div>
+  <div class="drawer-item" id="drawer-filter-toggle">
+    <span>🏷 按标签筛选</span><span></span>
+  </div>
+</nav>
 
 <main id="list"></main>
 
@@ -243,6 +350,13 @@ let ITEMS = [
     extra: "排雷：受有听力障碍，不想听的话会直接摘助听器",
     tags: ["BL","甜文","治愈"],
     added: "2026-10-07", done: false
+  },
+  {
+    id: 6, cat: "prompt", title: "写作润色提示词", author: "",
+    summary: "",
+    prompt: "你是一位资深文字编辑。请对以下文本进行润色：\n1. 修正语法错误与不通顺之处\n2. 提升表达力，但保持原意\n3. 风格保持自然，不要过度华丽\n4. 输出润色后的文本，并在末尾用一句话说明主要改动\n\n原文：[在此粘贴]",
+    tags: ["写作","润色"],
+    added: "2026-10-07", done: false
   }
 ];
 
@@ -253,15 +367,16 @@ const TAG_GROUPS = [
   { name: "氛围", tags: ["甜文","虐文","沙雕","正剧","治愈","高甜","强强","年上","年下"] }
 ];
 
-const DATA_VERSION = 6;
+const DATA_VERSION = 7;
 
 let currentCat = "all";
-let currentFilterTag = null; // 当前筛选的标签
-let editingId = null; // 当前正在编辑标签的条目ID
-let editingTags = []; // 编辑中的临时标签数组
+let currentFilterTag = null;
+let editingId = null;
+let editingTags = [];
 
-const CAT_LABEL = { read:"待读", todo:"待办", watch:"想看", inbox:"收件箱" };
-const CAT_BADGE = { read:"badge-read", todo:"badge-todo", watch:"badge-watch", inbox:"badge-inbox" };
+const CAT_LABEL = { read:"待读", todo:"待办", watch:"想看", inbox:"收件箱", prompt:"提示词" };
+const CAT_BADGE = { read:"badge-read", todo:"badge-todo", watch:"badge-watch", inbox:"badge-inbox", prompt:"badge-prompt" };
+const CAT_ORDER = ["read","todo","watch","prompt","inbox"];
 
 function render() {
   const list = document.getElementById("list");
@@ -271,8 +386,9 @@ function render() {
 
   // 计数
   document.getElementById("c-all").textContent = ITEMS.length;
-  ["read","todo","watch","inbox"].forEach(c => {
-    document.getElementById("c-"+c).textContent = ITEMS.filter(i=>i.cat===c).length;
+  CAT_ORDER.forEach(c => {
+    const el = document.getElementById("c-"+c);
+    if (el) el.textContent = ITEMS.filter(i=>i.cat===c).length;
   });
 
   if (items.length === 0) {
@@ -282,9 +398,8 @@ function render() {
 
   // 按分类分组（仅 all 视图）
   if (currentCat === "all") {
-    const cats = ["read","todo","watch","inbox"];
     let html = "";
-    cats.forEach(c => {
+    CAT_ORDER.forEach(c => {
       const sub = items.filter(i => i.cat === c);
       if (sub.length === 0) return;
       html += `<div class="section-title">${CAT_LABEL[c]}</div>`;
@@ -300,6 +415,12 @@ function renderItem(i) {
   const dueLine = i.due ? `<span class="due">⏰ ${i.due}</span>` : "";
   const authorLine = i.author ? `<div class="item-author">${i.author}</div>` : "";
   const tagsLine = (i.tags && i.tags.length) ? `<div class="item-tags">${i.tags.map(t=>`<span class="tag tag-clickable" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">${t}</span>`).join("")}</div>` : "";
+  const extraLine = i.extra ? `<div class="item-summary" style="color:var(--text-sub);font-style:normal;border-left:2px solid var(--divider);padding-left:8px;margin-top:6px">${i.extra}</div>` : "";
+  const promptBlock = i.prompt ? `
+    <div class="prompt-body" id="pb-${i.id}">${i.prompt.replace(/</g,"&lt;")}</div>
+    <div class="prompt-toggle" onclick="togglePrompt(${i.id})">展开全文</div>
+  ` : "";
+  const copyBtn = i.prompt ? `<button class="btn" onclick="copyPrompt(${i.id})">📋 复制</button>` : "";
   return `
     <div class="item ${i.done?'done':''}" data-id="${i.id}">
       <div class="item-head">
@@ -310,7 +431,8 @@ function renderItem(i) {
         <span class="badge ${CAT_BADGE[i.cat]}">${CAT_LABEL[i.cat]}</span>
       </div>
       ${i.summary ? `<div class="item-summary">${i.summary}</div>` : ""}
-      ${i.extra ? `<div class="item-summary" style="color:#8a8a8a;font-style:normal;border-left:2px solid var(--divider);padding-left:8px;margin-top:6px">${i.extra}</div>` : ""}
+      ${extraLine}
+      ${promptBlock}
       ${tagsLine}
       <div class="item-meta">
         ${dueLine}
@@ -319,6 +441,7 @@ function renderItem(i) {
       <div class="actions">
         <button class="btn btn-primary" onclick="toggleDone(${i.id})">${i.done?'取消完成':'标记完成'}</button>
         <button class="btn" onclick="openTagModal(${i.id})">🏷 标签</button>
+        ${copyBtn}
         <button class="btn" onclick="moveTo(${i.id},'inbox')">→收件箱</button>
         <button class="btn" onclick="del(${i.id})">删除</button>
       </div>
@@ -401,8 +524,9 @@ function filterByTag(t) {
   } else {
     currentFilterTag = t;
     currentCat = "all";
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-    document.querySelector('.tab[data-cat="all"]').classList.add("active");
+    document.querySelectorAll(".drawer-item").forEach(x=>x.classList.remove("active"));
+    const allItem = document.querySelector('.drawer-item[data-cat="all"]');
+    if (allItem) allItem.classList.add("active");
   }
   renderFilterBar();
   render();
@@ -426,6 +550,28 @@ function clearFilter() {
   render();
 }
 
+// ===== 提示词展开/复制 =====
+function togglePrompt(id) {
+  const el = document.getElementById("pb-"+id);
+  if (!el) return;
+  el.classList.toggle("expanded");
+  const toggle = el.nextElementSibling;
+  if (toggle) toggle.textContent = el.classList.contains("expanded") ? "收起" : "展开全文";
+}
+function copyPrompt(id) {
+  const i = ITEMS.find(x=>x.id===id);
+  if (!i || !i.prompt) return;
+  navigator.clipboard.writeText(i.prompt).then(() => {
+    alert("已复制到剪贴板");
+  }).catch(() => {
+    // 降级：用 textarea 选中
+    const ta = document.createElement("textarea");
+    ta.value = i.prompt; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    alert("已复制到剪贴板");
+  });
+}
+
 // 持久化
 function save() {
   try {
@@ -446,20 +592,41 @@ function load() {
   } catch(e){}
 }
 
-// 标签切换
-document.getElementById("tabs").addEventListener("click", e => {
-  const t = e.target.closest(".tab");
-  if (!t || t.id === "filter-toggle") return;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  t.classList.add("active");
-  currentCat = t.dataset.cat;
+// 侧边抽屉
+const drawer = document.getElementById("drawer");
+const drawerMask = document.getElementById("drawer-mask");
+function openDrawer() {
+  drawer.classList.add("show");
+  drawerMask.classList.add("show");
+}
+function closeDrawer() {
+  drawer.classList.remove("show");
+  drawerMask.classList.remove("show");
+}
+document.getElementById("menu-btn").addEventListener("click", openDrawer);
+drawerMask.addEventListener("click", closeDrawer);
+
+// 抽屉里分类项点击
+document.getElementById("drawer").addEventListener("click", e => {
+  const item = e.target.closest(".drawer-item");
+  if (!item) return;
+  if (item.id === "drawer-filter-toggle") {
+    document.getElementById("filter-bar").classList.toggle("show");
+    closeDrawer();
+    return;
+  }
+  const cat = item.dataset.cat;
+  if (!cat) return;
+  document.querySelectorAll(".drawer-item").forEach(x=>x.classList.remove("active"));
+  item.classList.add("active");
+  currentCat = cat;
+  currentFilterTag = null;
+  renderFilterBar();
   render();
+  closeDrawer();
 });
 
-// 筛选条切换
-document.getElementById("filter-toggle").addEventListener("click", () => {
-  document.getElementById("filter-bar").classList.toggle("show");
-});
+// 筛选条清除
 document.getElementById("filter-clear").addEventListener("click", clearFilter);
 
 // 自定义标签输入框回车
