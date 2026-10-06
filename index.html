@@ -265,10 +265,22 @@
   .modal .tag-options { display: flex; flex-wrap: wrap; gap: 8px; }
   .modal .tag-opt {
     padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    border: 1px solid var(--divider); background: var(--card); color: var(--text);
-    cursor: pointer;
+    border: 2px solid transparent; background: var(--divider); color: var(--text-sub);
+    cursor: pointer; transition: all 0.15s; opacity: 0.7;
   }
-  .modal .tag-opt.selected { font-weight: 700; }
+  .modal .tag-opt.selected {
+    font-weight: 700; opacity: 1; border-color: transparent;
+    transform: scale(1.02);
+  }
+  /* 选中时用各自分组颜色 */
+  .modal .tag-opt.selected.tag-gender { background: #FCE7F3; color: #BE185D; }
+  .modal .tag-opt.selected.tag-theme  { background: #DBEAFE; color: #1D4ED8; }
+  .modal .tag-opt.selected.tag-vibe   { background: #FEF3C7; color: #B45309; }
+  .modal .tag-opt.selected.tag-region { background: #D1FAE5; color: #047857; }
+  .modal .tag-opt.selected.tag-type   { background: #F3E8FF; color: #7E22CE; }
+  .modal .tag-opt.selected.tag-custom { background: var(--accent); color: #fff; }
+  /* 未选中的标签默认灰底 */
+  .modal .tag-opt:not(.selected) { background: var(--divider); color: var(--text-sub); }
   .modal .custom-input { display: flex; gap: 8px; margin-top: 8px; }
   .modal .custom-input input {
     flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--divider);
