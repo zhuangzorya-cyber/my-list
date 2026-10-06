@@ -71,18 +71,6 @@
   }
   header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; }
   header .sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
-  .filter-bar {
-    display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px;
-    padding-top: 8px; border-top: 1px dashed var(--divider); align-items: center;
-  }
-  .filter-bar.show { display: flex; }
-  .filter-tag {
-    padding: 4px 10px; border-radius: 999px; font-size: 12px;
-    background: var(--btn-bg); border: 1px solid var(--divider); color: var(--text-sub);
-    cursor: pointer;
-  }
-  .filter-tag.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-  .filter-clear { font-size: 12px; color: var(--text-sub); padding: 4px 8px; cursor: pointer; text-decoration: underline; }
   main { padding: 14px 16px 100px; }
   .empty {
     text-align: center; padding: 60px 20px; color: var(--text-sub);
@@ -309,10 +297,6 @@
     <span id="page-title">我的清单</span>
   </h1>
   <div class="sub" id="page-sub">把内容发给 WorkBuddy，自动归入这里</div>
-  <div class="filter-bar" id="filter-bar">
-    <span class="filter-clear" id="filter-clear">清除筛选</span>
-    <div id="filter-tags" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
-  </div>
 </header>
 
 <!-- 侧边抽屉 -->
@@ -343,10 +327,6 @@
   </div>
   <div class="drawer-item" data-cat="trash">
     <span>🗑 回收站</span><span class="count" id="c-trash">0</span>
-  </div>
-  <div class="drawer-divider"></div>
-  <div class="drawer-item" id="drawer-filter-toggle">
-    <span>🏷 按标签筛选</span><span></span>
   </div>
 </nav>
 
@@ -427,7 +407,6 @@ function tagCls(t) { return TAG_CLS_MAP[t] || "tag-custom"; }
 const DATA_VERSION = 8;
 
 let currentCat = "all";
-let currentFilterTag = null;
 let editingId = null;
 let editingTags = [];
 
@@ -454,20 +433,6 @@ function render() {
       }
     }
   });
-
-  // 标签筛选模式
-  if (currentFilterTag) {
-    pageTitle.textContent = "筛选：#" + currentFilterTag;
-    pageSub.textContent = "点击清除筛选";
-    let items = active.filter(i => (i.tags||[]).includes(currentFilterTag));
-    if (currentCat !== "all" && currentCat !== "trash") items = items.filter(i => i.cat === currentCat);
-    if (items.length === 0) {
-      list.innerHTML = `<div class="empty"><span class="emoji">🏷</span>没有标签为「${currentFilterTag}」的内容</div>`;
-    } else {
-      list.innerHTML = items.map(renderItem).join("");
-    }
-    return;
-  }
 
   // 概览首页：2×2 方块
   if (currentCat === "all") {
@@ -532,11 +497,9 @@ function render() {
 
 function selectCat(cat) {
   currentCat = cat;
-  currentFilterTag = null;
   document.querySelectorAll(".drawer-item").forEach(x=>x.classList.remove("active"));
   const item = document.querySelector(`.drawer-item[data-cat="${cat}"]`);
   if (item) item.classList.add("active");
-  renderFilterBar();
   render();
   closeDrawer();
 }
@@ -544,7 +507,7 @@ function selectCat(cat) {
 function renderItem(i) {
   const dueLine = i.due ? `<span class="due">⏰ ${i.due}</span>` : "";
   const authorLine = i.author ? `<div class="item-author">${i.author}</div>` : "";
-  const tagsLine = (i.tags && i.tags.length) ? `<div class="item-tags">${i.tags.map(t=>`<span class="tag ${tagCls(t)} tag-clickable" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">${t}</span>`).join("")}</div>` : "";
+  const tagsLine = (i.tags && i.tags.length) ? `<div class="item-tags">${i.tags.map(t=>`<span class="tag ${tagCls(t)}">${t}</span>`).join("")}</div>` : "";
   const extraLine = i.extra ? `<div class="item-summary" style="border-left:2px solid var(--divider);padding-left:8px;margin-top:6px">${i.extra}</div>` : "";
   const promptBlock = i.prompt ? `
     <div class="prompt-body" id="pb-${i.id}">${i.prompt.replace(/</g,"&lt;")}</div>
@@ -692,38 +655,6 @@ function saveTags() {
   save(); render(); closeTagModal();
 }
 
-// ===== 标签筛选 =====
-function filterByTag(t) {
-  if (currentFilterTag === t) {
-    currentFilterTag = null;
-  } else {
-    currentFilterTag = t;
-    currentCat = "all";
-    document.querySelectorAll(".drawer-item").forEach(x=>x.classList.remove("active"));
-    const allItem = document.querySelector('.drawer-item[data-cat="all"]');
-    if (allItem) allItem.classList.add("active");
-  }
-  renderFilterBar();
-  render();
-}
-function renderFilterBar() {
-  const bar = document.getElementById("filter-bar");
-  const tagsBox = document.getElementById("filter-tags");
-  const all = new Set();
-  ITEMS.forEach(i => { if(!i.deleted) (i.tags||[]).forEach(t => all.add(t)); });
-  const tagsArr = [...all].sort();
-  tagsBox.innerHTML = tagsArr.map(t => {
-    const active = currentFilterTag === t ? "active" : "";
-    return `<span class="filter-tag ${active}" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">${t}</span>`;
-  }).join("");
-  bar.classList.toggle("show", tagsArr.length > 0);
-}
-function clearFilter() {
-  currentFilterTag = null;
-  renderFilterBar();
-  render();
-}
-
 // ===== 提示词展开/复制 =====
 function togglePrompt(id) {
   const el = document.getElementById("pb-"+id);
@@ -781,17 +712,11 @@ drawerMask.addEventListener("click", closeDrawer);
 document.getElementById("drawer").addEventListener("click", e => {
   const item = e.target.closest(".drawer-item");
   if (!item) return;
-  if (item.id === "drawer-filter-toggle") {
-    document.getElementById("filter-bar").classList.toggle("show");
-    closeDrawer();
-    return;
-  }
   const cat = item.dataset.cat;
   if (!cat) return;
   selectCat(cat);
 });
 
-document.getElementById("filter-clear").addEventListener("click", clearFilter);
 document.getElementById("custom-tag-input").addEventListener("keydown", e => {
   if (e.key === "Enter") { e.preventDefault(); addCustomTag(); }
 });
@@ -800,7 +725,6 @@ document.getElementById("tag-modal").addEventListener("click", e => {
 });
 
 load();
-renderFilterBar();
 render();
 </script>
 </body>
