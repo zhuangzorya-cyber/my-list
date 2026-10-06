@@ -104,6 +104,69 @@
     text-align: center; font-size: 11px; color: var(--text-sub);
     padding: 20px; margin-top: 10px;
   }
+  /* 标签样式 */
+  .item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; background: #f0ede8; color: #7a5a3a;
+    border: 1px solid #e5dfd5;
+  }
+  .tag-clickable { cursor: pointer; }
+  .tag-clickable:active { background: #e5dfd5; }
+  /* 标签筛选条 */
+  .filter-bar {
+    display: none; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    padding-top: 8px; border-top: 1px dashed var(--divider);
+  }
+  .filter-bar.show { display: flex; }
+  .filter-tag {
+    padding: 4px 10px; border-radius: 999px; font-size: 12px;
+    background: #fff; border: 1px solid var(--divider); color: var(--text-sub);
+    cursor: pointer;
+  }
+  .filter-tag.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .filter-clear { font-size: 12px; color: var(--text-sub); padding: 4px 8px; cursor: pointer; text-decoration: underline; }
+  /* 标签编辑弹窗 */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff; width: 100%; max-width: 720px; border-radius: 16px 16px 0 0;
+    padding: 18px 18px 30px; max-height: 80vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal h3 { margin: 0 0 4px; font-size: 17px; }
+  .modal .modal-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 14px; }
+  .modal .tag-group { margin-bottom: 14px; }
+  .modal .tag-group-title { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; font-weight: 500; }
+  .modal .tag-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .modal .tag-opt {
+    padding: 5px 12px; border-radius: 999px; font-size: 13px;
+    background: #f5f5f3; border: 1px solid var(--divider); color: var(--text);
+    cursor: pointer;
+  }
+  .modal .tag-opt.selected { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .modal .custom-input {
+    display: flex; gap: 6px; margin-top: 6px;
+  }
+  .modal .custom-input input {
+    flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--divider);
+    font-size: 14px; font-family: inherit;
+  }
+  .modal .custom-input button {
+    padding: 8px 14px; border-radius: 8px; background: var(--text); color: #fff;
+    border: none; font-size: 13px; font-family: inherit; cursor: pointer;
+  }
+  .modal .modal-actions {
+    display: flex; gap: 8px; margin-top: 18px;
+  }
+  .modal .modal-actions button {
+    flex: 1; padding: 10px; border-radius: 10px; font-size: 14px;
+    border: 1px solid var(--divider); background: #fff; cursor: pointer; font-family: inherit;
+  }
+  .modal .modal-actions .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -117,12 +180,37 @@
     <button class="tab" data-cat="todo">待办 <span class="count" id="c-todo">0</span></button>
     <button class="tab" data-cat="watch">想看 <span class="count" id="c-watch">0</span></button>
     <button class="tab" data-cat="inbox">收件箱 <span class="count" id="c-inbox">0</span></button>
+    <button class="tab" id="filter-toggle" style="margin-left:auto">🏷 筛选</button>
+  </div>
+  <div class="filter-bar" id="filter-bar">
+    <span class="filter-clear" id="filter-clear">清除筛选</span>
+    <div id="filter-tags" style="display:flex;flex-wrap:wrap;gap:6px;flex:1"></div>
   </div>
 </header>
 
 <main id="list"></main>
 
 <div class="footer-hint">加到桌面：Safari 分享 → 添加到主屏幕</div>
+
+<!-- 标签编辑弹窗 -->
+<div class="modal-mask" id="tag-modal">
+  <div class="modal">
+    <h3 id="modal-title">编辑标签</h3>
+    <div class="modal-sub">可多选，也可自定义添加</div>
+    <div id="modal-tag-groups"></div>
+    <div class="tag-group">
+      <div class="tag-group-title">自定义标签</div>
+      <div class="custom-input">
+        <input type="text" id="custom-tag-input" placeholder="输入标签名，回车添加">
+        <button onclick="addCustomTag()">添加</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeTagModal()">取消</button>
+      <button class="primary" onclick="saveTags()">保存</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // 数据：默认带 3 条示例，让你看到效果
@@ -146,20 +234,31 @@ let ITEMS = [
     id: 4, cat: "read", title: "《金牌打手》", author: "",
     summary: "",
     extra: "看完后没再看过同类型小说",
+    tags: ["BL","强强"],
     added: "2026-10-07", done: false
   },
   {
     id: 5, cat: "read", title: "《小阵雨》", author: "天然呆呀",
     summary: "",
     extra: "排雷：受有听力障碍，不想听的话会直接摘助听器",
+    tags: ["BL","甜文","治愈"],
     added: "2026-10-07", done: false
   }
 ];
 
-// 版本号：当这里的默认数据更新时，强制刷新一次本地存储，保证新条目能进到老用户的页面里
-const DATA_VERSION = 5;
+// 内置标签库（按分组）
+const TAG_GROUPS = [
+  { name: "性别向", tags: ["BL","BG","GL","无CP"] },
+  { name: "题材", tags: ["先婚后爱","破镜重圆","娱乐圈","ABO","双性","重生","穿越","星际","末世","古言","现言","悬疑"] },
+  { name: "氛围", tags: ["甜文","虐文","沙雕","正剧","治愈","高甜","强强","年上","年下"] }
+];
+
+const DATA_VERSION = 6;
 
 let currentCat = "all";
+let currentFilterTag = null; // 当前筛选的标签
+let editingId = null; // 当前正在编辑标签的条目ID
+let editingTags = []; // 编辑中的临时标签数组
 
 const CAT_LABEL = { read:"待读", todo:"待办", watch:"想看", inbox:"收件箱" };
 const CAT_BADGE = { read:"badge-read", todo:"badge-todo", watch:"badge-watch", inbox:"badge-inbox" };
@@ -168,6 +267,7 @@ function render() {
   const list = document.getElementById("list");
   let items = ITEMS;
   if (currentCat !== "all") items = items.filter(i => i.cat === currentCat);
+  if (currentFilterTag) items = items.filter(i => (i.tags||[]).includes(currentFilterTag));
 
   // 计数
   document.getElementById("c-all").textContent = ITEMS.length;
@@ -176,7 +276,7 @@ function render() {
   });
 
   if (items.length === 0) {
-    list.innerHTML = `<div class="empty"><span class="emoji">📝</span>这里还空着<br>把内容发给 WorkBuddy，它会自动整理后塞进来</div>`;
+    list.innerHTML = `<div class="empty"><span class="emoji">📝</span>${currentFilterTag?'没有标签为「'+currentFilterTag+'」的内容':'这里还空着'}<br>${currentFilterTag?'':'把内容发给 WorkBuddy，它会自动整理后塞进来'}</div>`;
     return;
   }
 
@@ -199,6 +299,7 @@ function render() {
 function renderItem(i) {
   const dueLine = i.due ? `<span class="due">⏰ ${i.due}</span>` : "";
   const authorLine = i.author ? `<div class="item-author">${i.author}</div>` : "";
+  const tagsLine = (i.tags && i.tags.length) ? `<div class="item-tags">${i.tags.map(t=>`<span class="tag tag-clickable" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">${t}</span>`).join("")}</div>` : "";
   return `
     <div class="item ${i.done?'done':''}" data-id="${i.id}">
       <div class="item-head">
@@ -210,12 +311,14 @@ function renderItem(i) {
       </div>
       ${i.summary ? `<div class="item-summary">${i.summary}</div>` : ""}
       ${i.extra ? `<div class="item-summary" style="color:#8a8a8a;font-style:normal;border-left:2px solid var(--divider);padding-left:8px;margin-top:6px">${i.extra}</div>` : ""}
+      ${tagsLine}
       <div class="item-meta">
         ${dueLine}
         <span>+${i.added}</span>
       </div>
       <div class="actions">
         <button class="btn btn-primary" onclick="toggleDone(${i.id})">${i.done?'取消完成':'标记完成'}</button>
+        <button class="btn" onclick="openTagModal(${i.id})">🏷 标签</button>
         <button class="btn" onclick="moveTo(${i.id},'inbox')">→收件箱</button>
         <button class="btn" onclick="del(${i.id})">删除</button>
       </div>
@@ -232,6 +335,95 @@ function del(id) {
 }
 function moveTo(id, cat) {
   const i = ITEMS.find(x=>x.id===id); if(i){ i.cat=cat; } save(); render();
+}
+
+// ===== 标签编辑弹窗 =====
+function openTagModal(id) {
+  const i = ITEMS.find(x=>x.id===id);
+  if (!i) return;
+  editingId = id;
+  editingTags = [...(i.tags || [])];
+  document.getElementById("modal-title").textContent = "编辑标签 · " + i.title;
+  renderModalTags();
+  document.getElementById("tag-modal").classList.add("show");
+}
+function closeTagModal() {
+  document.getElementById("tag-modal").classList.remove("show");
+  editingId = null; editingTags = [];
+}
+function renderModalTags() {
+  const container = document.getElementById("modal-tag-groups");
+  let html = "";
+  TAG_GROUPS.forEach(g => {
+    html += `<div class="tag-group"><div class="tag-group-title">${g.name}</div><div class="tag-options">`;
+    g.tags.forEach(t => {
+      const sel = editingTags.includes(t) ? "selected" : "";
+      html += `<span class="tag-opt ${sel}" onclick="toggleEditTag('${t.replace(/'/g,"\\'")}')">${t}</span>`;
+    });
+    html += `</div></div>`;
+  });
+  // 已添加的自定义标签（不在内置库里的）
+  const builtin = new Set(TAG_GROUPS.flatMap(g=>g.tags));
+  const customs = editingTags.filter(t => !builtin.has(t));
+  if (customs.length) {
+    html += `<div class="tag-group"><div class="tag-group-title">已添加（自定义）</div><div class="tag-options">`;
+    customs.forEach(t => {
+      html += `<span class="tag-opt selected" onclick="toggleEditTag('${t.replace(/'/g,"\\'")}')">${t} ✕</span>`;
+    });
+    html += `</div></div>`;
+  }
+  container.innerHTML = html;
+}
+function toggleEditTag(t) {
+  const idx = editingTags.indexOf(t);
+  if (idx >= 0) editingTags.splice(idx, 1);
+  else editingTags.push(t);
+  renderModalTags();
+}
+function addCustomTag() {
+  const input = document.getElementById("custom-tag-input");
+  const v = input.value.trim();
+  if (!v) return;
+  if (!editingTags.includes(v)) editingTags.push(v);
+  input.value = "";
+  renderModalTags();
+}
+function saveTags() {
+  const i = ITEMS.find(x=>x.id===editingId);
+  if (i) i.tags = [...editingTags];
+  save(); render(); closeTagModal();
+}
+
+// ===== 标签筛选 =====
+function filterByTag(t) {
+  if (currentFilterTag === t) {
+    currentFilterTag = null;
+  } else {
+    currentFilterTag = t;
+    currentCat = "all";
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelector('.tab[data-cat="all"]').classList.add("active");
+  }
+  renderFilterBar();
+  render();
+}
+function renderFilterBar() {
+  const bar = document.getElementById("filter-bar");
+  const tagsBox = document.getElementById("filter-tags");
+  // 收集所有用过的标签
+  const all = new Set();
+  ITEMS.forEach(i => (i.tags||[]).forEach(t => all.add(t)));
+  const tagsArr = [...all].sort();
+  tagsBox.innerHTML = tagsArr.map(t => {
+    const active = currentFilterTag === t ? "active" : "";
+    return `<span class="filter-tag ${active}" onclick="filterByTag('${t.replace(/'/g,"\\'")}')">${t}</span>`;
+  }).join("");
+  bar.classList.toggle("show", tagsArr.length > 0);
+}
+function clearFilter() {
+  currentFilterTag = null;
+  renderFilterBar();
+  render();
 }
 
 // 持久化
@@ -257,14 +449,31 @@ function load() {
 // 标签切换
 document.getElementById("tabs").addEventListener("click", e => {
   const t = e.target.closest(".tab");
-  if (!t) return;
+  if (!t || t.id === "filter-toggle") return;
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
   currentCat = t.dataset.cat;
   render();
 });
 
+// 筛选条切换
+document.getElementById("filter-toggle").addEventListener("click", () => {
+  document.getElementById("filter-bar").classList.toggle("show");
+});
+document.getElementById("filter-clear").addEventListener("click", clearFilter);
+
+// 自定义标签输入框回车
+document.getElementById("custom-tag-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); addCustomTag(); }
+});
+
+// 点击弹窗遮罩关闭
+document.getElementById("tag-modal").addEventListener("click", e => {
+  if (e.target.id === "tag-modal") closeTagModal();
+});
+
 load();
+renderFilterBar();
 render();
 </script>
 </body>
