@@ -618,32 +618,50 @@ function moveTo(id, cat) {
 }
 
 // ===== 标签编辑弹窗 =====
+// 每个分类只显示相关的标签组（按组名匹配）
+const CAT_TAG_GROUPS = {
+  read:   ["性别向","题材","氛围"],          // 待读：小说/书籍标签
+  watch:  ["地区","类型"],                    // 想看：影视/演出标签
+  prompt: ["用途"],                           // 提示词：用途标签
+  todo:   [],                                 // 待办：没有预设标签
+  inbox:  [],                                 // 收件箱：无预设
+  trash:  []                                  // 回收站：无预设
+};
+
 function openTagModal(id) {
   const i = ITEMS.find(x=>x.id===id);
   if (!i) return;
   editingId = id;
   editingTags = [...(i.tags || [])];
   document.getElementById("modal-title").textContent = "编辑标签 · " + i.title;
-  renderModalTags();
+  renderModalTags(i.cat);
   document.getElementById("tag-modal").classList.add("show");
 }
 function closeTagModal() {
   document.getElementById("tag-modal").classList.remove("show");
   editingId = null; editingTags = [];
 }
-function renderModalTags() {
+function renderModalTags(cat) {
   const container = document.getElementById("modal-tag-groups");
+  // 根据分类过滤要显示的标签组
+  const allowedGroups = CAT_TAG_GROUPS[cat] || [];
+  const groups = TAG_GROUPS.filter(g => allowedGroups.includes(g.name));
   let html = "";
-  TAG_GROUPS.forEach(g => {
-    html += `<div class="tag-group"><div class="tag-group-title">${g.name}</div><div class="tag-options">`;
-    g.tags.forEach(t => {
-      const sel = editingTags.includes(t) ? "selected " + tagCls(t) : "";
-      const selCls = editingTags.includes(t) ? "selected" : "";
-      html += `<span class="tag-opt ${selCls} ${editingTags.includes(t)?tagCls(t):''}" onclick="toggleEditTag('${t.replace(/'/g,"\\'")}')">${t}</span>`;
+  if (groups.length === 0) {
+    html = `<div class="modal-sub" style="margin-bottom:10px">该分类没有预设标签，可直接在下方自定义添加</div>`;
+  } else {
+    groups.forEach(g => {
+      html += `<div class="tag-group"><div class="tag-group-title">${g.name}</div><div class="tag-options">`;
+      g.tags.forEach(t => {
+        const selCls = editingTags.includes(t) ? "selected" : "";
+        const colorCls = editingTags.includes(t) ? tagCls(t) : "";
+        html += `<span class="tag-opt ${selCls} ${colorCls}" onclick="toggleEditTag('${t.replace(/'/g,"\\'")}')">${t}</span>`;
+      });
+      html += `</div></div>`;
     });
-    html += `</div></div>`;
-  });
-  const builtin = new Set(TAG_GROUPS.flatMap(g=>g.tags));
+  }
+  // 已有但不在预设列表里的标签（含自定义）始终显示
+  const builtin = new Set(groups.flatMap(g=>g.tags));
   const customs = editingTags.filter(t => !builtin.has(t));
   if (customs.length) {
     html += `<div class="tag-group"><div class="tag-group-title">已添加（自定义）</div><div class="tag-options">`;
