@@ -135,6 +135,40 @@
     font-size: 14px;
   }
   .empty .emoji { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.4; }
+  /* 概览卡片 */
+  .overview-grid {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 14px;
+  }
+  .overview-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border-radius: 14px; padding: 22px 20px;
+    border: 1px solid var(--divider); cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .overview-card:active { transform: scale(0.98); }
+  .overview-card .ov-left { display: flex; align-items: center; gap: 14px; }
+  .overview-card .ov-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex: 0 0 44px;
+  }
+  .overview-card .ov-info { display: flex; flex-direction: column; gap: 2px; }
+  .overview-card .ov-title { font-size: 17px; font-weight: 600; color: var(--text); }
+  .overview-card .ov-sub { font-size: 12px; color: var(--text-sub); }
+  .overview-card .ov-count {
+    font-size: 28px; font-weight: 700; color: var(--text);
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .overview-card .ov-count.zero { color: var(--text-sub); opacity: 0.4; }
+  .ov-icon-todo { background: #fdf0e3; }
+  .ov-icon-read { background: var(--accent-soft); }
+  .ov-icon-watch { background: #eceefc; }
+  .ov-icon-prompt { background: #f3edf8; }
+  @media (prefers-color-scheme: dark) {
+    .ov-icon-todo { background: #3a2a18; }
+    .ov-icon-watch { background: #23263a; }
+    .ov-icon-prompt { background: #2e2438; }
+  }
   .footer-hint {
     text-align: center; font-size: 11px; color: var(--text-sub);
     padding: 20px; margin-top: 10px;
@@ -380,9 +414,6 @@ const CAT_ORDER = ["read","todo","watch","prompt","inbox"];
 
 function render() {
   const list = document.getElementById("list");
-  let items = ITEMS;
-  if (currentCat !== "all") items = items.filter(i => i.cat === currentCat);
-  if (currentFilterTag) items = items.filter(i => (i.tags||[]).includes(currentFilterTag));
 
   // 计数
   document.getElementById("c-all").textContent = ITEMS.length;
@@ -391,24 +422,64 @@ function render() {
     if (el) el.textContent = ITEMS.filter(i=>i.cat===c).length;
   });
 
-  if (items.length === 0) {
-    list.innerHTML = `<div class="empty"><span class="emoji">📝</span>${currentFilterTag?'没有标签为「'+currentFilterTag+'」的内容':'这里还空着'}<br>${currentFilterTag?'':'把内容发给 WorkBuddy，它会自动整理后塞进来'}</div>`;
+  // 有标签筛选时，无论在哪个分类都显示筛选后的条目列表
+  if (currentFilterTag) {
+    let items = ITEMS.filter(i => (i.tags||[]).includes(currentFilterTag));
+    if (currentCat !== "all") items = items.filter(i => i.cat === currentCat);
+    if (items.length === 0) {
+      list.innerHTML = `<div class="empty"><span class="emoji">🏷</span>没有标签为「${currentFilterTag}」的内容</div>`;
+    } else {
+      list.innerHTML = items.map(renderItem).join("");
+    }
     return;
   }
 
-  // 按分类分组（仅 all 视图）
+  // 概览首页：四大分类卡片
   if (currentCat === "all") {
-    let html = "";
-    CAT_ORDER.forEach(c => {
-      const sub = items.filter(i => i.cat === c);
-      if (sub.length === 0) return;
-      html += `<div class="section-title">${CAT_LABEL[c]}</div>`;
-      html += sub.map(renderItem).join("");
+    const cats = [
+      { key:"todo",   icon:"⏰", label:"待办",   sub:"需要做的事",     iconCls:"ov-icon-todo" },
+      { key:"read",   icon:"📚", label:"待读",   sub:"书 / 文章 / 小说", iconCls:"ov-icon-read" },
+      { key:"watch",  icon:"🎬", label:"想看",   sub:"影视 / 展览 / 演出", iconCls:"ov-icon-watch" },
+      { key:"prompt", icon:"🤖", label:"提示词", sub:"AI prompt 收藏",  iconCls:"ov-icon-prompt" }
+    ];
+    let html = '<div class="overview-grid">';
+    cats.forEach(c => {
+      const n = ITEMS.filter(i=>i.cat===c.key).length;
+      html += `
+        <div class="overview-card" onclick="selectCat('${c.key}')">
+          <div class="ov-left">
+            <div class="ov-icon ${c.iconCls}">${c.icon}</div>
+            <div class="ov-info">
+              <div class="ov-title">${c.label}</div>
+              <div class="ov-sub">${c.sub}</div>
+            </div>
+          </div>
+          <div class="ov-count ${n===0?'zero':''}">${n}</div>
+        </div>`;
     });
+    html += '</div>';
     list.innerHTML = html;
-  } else {
-    list.innerHTML = items.map(renderItem).join("");
+    return;
   }
+
+  // 单分类视图：显示条目列表
+  let items = ITEMS.filter(i => i.cat === currentCat);
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty"><span class="emoji">📝</span>这里还空着<br>把内容发给 WorkBuddy，它会自动整理后塞进来</div>`;
+    return;
+  }
+  // 按分类分组标题（去掉，单分类不需要标题）
+  list.innerHTML = items.map(renderItem).join("");
+}
+
+function selectCat(cat) {
+  currentCat = cat;
+  currentFilterTag = null;
+  document.querySelectorAll(".drawer-item").forEach(x=>x.classList.remove("active"));
+  const item = document.querySelector(`.drawer-item[data-cat="${cat}"]`);
+  if (item) item.classList.add("active");
+  renderFilterBar();
+  render();
 }
 
 function renderItem(i) {
