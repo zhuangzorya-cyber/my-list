@@ -74,28 +74,61 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
 
-  /* ===== 紫色 Hero 横幅 ===== */
+  /* ===== 随机推荐卡（Hero） ===== */
   .hero {
-    margin: 8px 20px 18px; padding: 22px;
+    margin: 8px 20px 18px; padding: 20px 22px 18px;
     background: linear-gradient(135deg, #A78BFA 0%, #7C5CFC 100%);
     border-radius: var(--radius); color: #fff;
     box-shadow: 0 12px 28px rgba(124,92,252,0.28);
     position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.15s;
   }
-  .hero-title { font-size: 24px; font-weight: 800; line-height: 1.15; max-width: 60%; }
-  .hero-sub { font-size: 13px; opacity: 0.9; margin-top: 8px; }
-  .hero-avatars {
-    display: flex; align-items: center; margin-top: 16px; gap: 8px;
+  .hero:active { transform: scale(0.98); }
+  .hero-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    opacity: 0.75; text-transform: uppercase; display: flex; align-items: center; gap: 6px;
   }
-  .hero-avatars .dot {
+  .hero-pick {
+    display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  }
+  .hero-pick-emoji {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+    flex-shrink: 0; backdrop-filter: blur(4px);
+  }
+  .hero-pick-body { flex: 1; min-width: 0; }
+  .hero-pick-title {
+    font-size: 17px; font-weight: 800; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .hero-pick-desc {
+    font-size: 12px; opacity: 0.85; margin-top: 5px; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .hero-pick-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .hero-pick-tags .htag {
+    padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
+    background: rgba(255,255,255,0.25); color: #fff;
+  }
+  .hero-empty { font-size: 14px; opacity: 0.9; margin-top: 6px; line-height: 1.5; }
+  .hero-refresh {
+    position: absolute; right: 14px; top: 14px;
     width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.3);
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #fff;
+    font-size: 15px; color: #fff; cursor: pointer; z-index: 2;
+    backdrop-filter: blur(4px); transition: transform 0.3s;
   }
+  .hero-refresh:active { transform: rotate(180deg); }
   .hero-deco {
-    position: absolute; right: -10px; top: 20px; font-size: 90px; opacity: 0.35;
-    transform: rotate(15deg);
+    position: absolute; right: -8px; bottom: -16px; font-size: 80px; opacity: 0.3;
+    transform: rotate(-12deg); pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    .hero { background: linear-gradient(135deg, #6D5BD0 0%, #5A3FD6 100%); }
   }
 
   /* ===== 主标题 ===== */
@@ -336,17 +369,12 @@
   <div class="cat-title" id="page-title">我的清单</div>
 </div>
 
-<!-- Hero 横幅 -->
-<div id="hero" class="hero">
-  <div class="hero-title">Daily<br>collection</div>
-  <div class="hero-sub">把内容发给 WorkBuddy，自动归入这里</div>
-  <div class="hero-avatars">
-    <div class="dot">📚</div>
-    <div class="dot">🎬</div>
-    <div class="dot">🤖</div>
-    <div class="dot">+</div>
-  </div>
-  <div class="hero-deco">✨</div>
+<!-- 随机推荐卡（Hero） -->
+<div id="hero" class="hero" onclick="pickRecommendation(true)">
+  <div class="hero-label">✨ 今日推荐 · 无聊看看</div>
+  <button class="hero-refresh" onclick="event.stopPropagation(); refreshPick()">↻</button>
+  <div id="hero-content"></div>
+  <div class="hero-deco">🎲</div>
 </div>
 
 <!-- 主内容区 -->
@@ -453,7 +481,78 @@ let editingTags = [];
 const CAT_LABEL = { read:"待读", todo:"待办", watch:"想看", inbox:"收件箱", prompt:"提示词", trash:"回收站" };
 const CAT_BADGE = { read:"badge-read", todo:"badge-todo", watch:"badge-watch", inbox:"badge-read", prompt:"badge-prompt", trash:"badge-trash" };
 
-// ===== 主渲染 =====
+// ===== 随机推荐卡 =====
+// 从「待读 + 想看」中未完成的条目里随机选一个，按日期固定（每天换一个）
+function getPickPool() {
+  return ITEMS.filter(i => !i.deleted && !i.done && (i.cat === "read" || i.cat === "watch"));
+}
+
+function getDailyIndex(max) {
+  if (max <= 0) return 0;
+  // 用今天日期生成一个种子，保证同一天看到的是同一个
+  const now = new Date();
+  const seed = now.getFullYear() * 10000 + (now.getMonth()+1) * 100 + now.getDate();
+  return seed % max;
+}
+
+let manualPickId = null; // 手动「换一个」时临时锁定
+
+function pickRecommendation(clickToView) {
+  const pool = getPickPool();
+  const heroContent = document.getElementById("hero-content");
+  if (pool.length === 0) {
+    heroContent.innerHTML = `
+      <div class="hero-empty">待读和想看都空空的～<br>无聊时把内容发给 WorkBuddy 吧</div>`;
+    return;
+  }
+  let pick;
+  if (manualPickId !== null) {
+    pick = pool.find(i => i.id === manualPickId);
+    if (!pick) manualPickId = null;
+  }
+  if (!pick) {
+    const idx = getDailyIndex(pool.length);
+    pick = pool[idx];
+  }
+  const emoji = pick.cat === "read" ? "📚" : "🎬";
+  const catLabel = pick.cat === "read" ? "待读" : "想看";
+  const desc = pick.summary || pick.extra || "";
+  const tags = (pick.tags && pick.tags.length)
+    ? `<div class="hero-pick-tags">${pick.tags.slice(0,4).map(t=>`<span class="htag">${t}</span>`).join("")}</div>`
+    : "";
+  heroContent.innerHTML = `
+    <div class="hero-pick">
+      <div class="hero-pick-emoji">${emoji}</div>
+      <div class="hero-pick-body">
+        <div class="hero-pick-title">${pick.title}</div>
+        ${desc ? `<div class="hero-pick-desc">${desc}</div>` : ""}
+        ${tags}
+      </div>
+    </div>`;
+  // 点击进入对应分类
+  if (clickToView) {
+    selectCat(pick.cat);
+  }
+}
+
+function refreshPick() {
+  const pool = getPickPool();
+  if (pool.length === 0) return;
+  if (pool.length === 1) { manualPickId = pool[0].id; pickRecommendation(false); return; }
+  // 随机选一个和当前不同的
+  let pick;
+  const current = document.querySelector("#hero-content .hero-pick-title");
+  const currentText = current ? current.textContent : "";
+  let attempts = 0;
+  do {
+    pick = pool[Math.floor(Math.random() * pool.length)];
+    attempts++;
+  } while (pick.title === currentText && attempts < 10);
+  manualPickId = pick.id;
+  pickRecommendation(false);
+}
+
+
 function render() {
   const list = document.getElementById("list");
   const pageTitle = document.getElementById("page-title");
@@ -504,6 +603,9 @@ function render() {
       html += recent.map(renderItem).join("");
     }
     list.innerHTML = html;
+
+    // 刷新首页推荐卡（不跳转）
+    pickRecommendation(false);
     return;
   }
 
