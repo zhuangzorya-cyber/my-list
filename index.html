@@ -154,10 +154,13 @@
   .overview-card.watch { background: linear-gradient(135deg, #BFDBFE, #93C5FD); }
   .overview-card.prompt { background: linear-gradient(135deg, #F5D0FE, #F0ABFC); }
   .overview-card .ov-icon {
-    width: 40px; height: 40px; border-radius: 12px;
+    width: 44px; height: 44px; border-radius: 12px;
     background: rgba(255,255,255,0.55); backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
+    overflow: hidden;
+  }
+  .overview-card .ov-icon img {
+    width: 34px; height: 34px; object-fit: contain;
   }
   .overview-card .ov-title { font-size: 15px; font-weight: 600; opacity: 0.85; }
   .overview-card .ov-count {
@@ -574,12 +577,12 @@ function render() {
 
     const active = ITEMS.filter(i => !i.deleted);
     const cats = [
-      { key:"todo",   icon:"⏰", label:"待办",   cls:"todo", deco:"📝" },
-      { key:"read",   icon:"📚", label:"待读",   cls:"read", deco:"📖" },
-      { key:"watch",  icon:"🎬", label:"想看",   cls:"watch", deco:"🍿" },
-      { key:"prompt", icon:"🤖", label:"提示词", cls:"prompt", deco:"💡" },
-      { key:"inbox",  icon:"📥", label:"收件箱", cls:"todo", deco:"📂" },
-      { key:"trash",  icon:"🗑", label:"回收站", cls:"watch", deco:"🧹" }
+      { key:"todo",   icon:"cat-todo.png",   label:"待办",   cls:"todo" },
+      { key:"read",   icon:"cat-read.png",   label:"待读",   cls:"read" },
+      { key:"watch",  icon:"cat-watch.png",  label:"想看",   cls:"watch" },
+      { key:"prompt", icon:"cat-prompt.png", label:"提示词", cls:"prompt" },
+      { key:"inbox",  icon:"cat-inbox.png",  label:"收件箱", cls:"todo" },
+      { key:"trash",  icon:"cat-trash.png",  label:"回收站", cls:"watch" }
     ];
     let html = '<div class="overview-grid">';
     cats.forEach(c => {
@@ -588,10 +591,9 @@ function render() {
       else n = active.filter(i=>i.cat===c.key).length;
       html += `
         <div class="overview-card ${c.cls}" onclick="selectCat('${c.key}')">
-          <div class="ov-icon">${c.icon}</div>
+          <div class="ov-icon"><img src="${c.icon}" alt="${c.label}"></div>
           <div class="ov-title">${c.label}</div>
           <div class="ov-count">${n}</div>
-          <div class="ov-deco">${c.deco}</div>
         </div>`;
     });
     html += '</div>';
