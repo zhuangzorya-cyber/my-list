@@ -1,0 +1,13 @@
+{
+  "name": "我的清单",
+  "short_name": "清单",
+  "description": "待读、待办、想看的清单",
+  "start_url": "/my-list/",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
